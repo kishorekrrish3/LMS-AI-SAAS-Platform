@@ -17,12 +17,7 @@ export async function toggleLessonCompletion(
 
   try {
     if (markComplete) {
-      // Remove if exists, then add user ID to completedBy array to prevent duplicates
-      await writeClient
-        .patch(lessonId)
-        .unset([`completedBy[@ == "${userId}"]`])
-        .commit();
-
+      // Add user ID to completedBy array
       await writeClient
         .patch(lessonId)
         .setIfMissing({ completedBy: [] })
@@ -35,6 +30,7 @@ export async function toggleLessonCompletion(
         .unset([`completedBy[@ == "${userId}"]`])
         .commit();
     }
+
     revalidatePath(`/lessons/${lessonSlug}`);
     revalidatePath("/dashboard");
 

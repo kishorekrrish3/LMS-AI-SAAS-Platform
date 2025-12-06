@@ -17,12 +17,6 @@ export async function toggleCourseCompletion(
 
   try {
     if (markComplete) {
-      // First remove if exists, then append to avoid duplicates
-      await writeClient
-        .patch(courseId)
-        .unset([`completedBy[@ == "${userId}"]`])
-        .commit();
-
       await writeClient
         .patch(courseId)
         .setIfMissing({ completedBy: [] })
@@ -34,6 +28,7 @@ export async function toggleCourseCompletion(
         .unset([`completedBy[@ == "${userId}"]`])
         .commit();
     }
+
     revalidatePath(`/courses/${courseSlug}`);
     revalidatePath("/dashboard");
 
