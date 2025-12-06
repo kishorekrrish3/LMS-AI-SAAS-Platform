@@ -1,0 +1,46 @@
+"use server";
+
+import { auth } from "@clerk/nextjs/server";
+import { revalidatePath } from "next/cache";
+import { writeClient } from "@/sanity/lib/client";
+
+export async function toggleLessonCompletion(
+  lessonId: string,
+  lessonSlug: string,
+  markComplete: boolean
+): Promise<{ success: boolean; isCompleted: boolean }> {
+  const { userId } = await auth();
+
+  if (!userId) {
+    return { success: false, isCompleted: false };
+  }
+
+  try {
+    if (markComplete) {
+      // Remove if exists, then add user ID to completedBy array to prevent duplicates
+      await writeClient
+        .patch(lessonId)
+        .unset([`completedBy[@ == "${userId}"]`])
+        .commit();
+
+      await writeClient
+        .patch(lessonId)
+        .setIfMissing({ completedBy: [] })
+        .append("completedBy", [userId])
+        .commit();
+    } else {
+      // Remove user ID from completedBy array
+      await writeClient
+        .patch(lessonId)
+        .unset([`completedBy[@ == "${userId}"]`])
+        .commit();
+    }
+    revalidatePath(`/lessons/${lessonSlug}`);
+    revalidatePath("/dashboard");
+
+    return { success: true, isCompleted: markComplete };
+  } catch (error) {
+    console.error("Failed to toggle lesson completion:", error);
+    return { success: false, isCompleted: !markComplete };
+  }
+}
