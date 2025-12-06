@@ -92,7 +92,7 @@ export function ModuleAccordionItemContent({
     dataset,
     path: "lessons",
   });
-  const editLessons = useEditDocument({
+  const editLessons = useEditDocument<SanityReference[]>({
     documentId: moduleId,
     documentType: "module",
     projectId,
@@ -108,7 +108,7 @@ export function ModuleAccordionItemContent({
   });
 
   const title = (moduleData as { title?: string })?.title || "Untitled Module";
-  const lessons = (currentLessons as SanityReference[]) ?? [];
+  const lessons = (currentLessons as unknown as SanityReference[]) ?? [];
   const currentLessonIds = new Set(lessons.map((l) => l._ref));
 
   // Filter out already-added lessons
